@@ -118,13 +118,17 @@ static BOOL ZeroNativePolicyListMatches(NSArray<NSString *> *values, NSURL *url)
     (void)notification;
     [self.host emitWindowFrameForWindowId:self.windowId open:NO];
     NSNumber *key = @(self.windowId);
-    [self.host.windows removeObjectForKey:key];
-    [self.host.webViews removeObjectForKey:key];
-    [self.host.delegates removeObjectForKey:key];
-    [self.host.bridgeScriptHandlers removeObjectForKey:key];
-    [self.host.assetSchemeHandlers removeObjectForKey:key];
-    [self.host.windowLabels removeObjectForKey:key];
-    if (self.host.windows.count == 0) {
+    ZeroNativeAppKitHost *host = self.host;
+    BOOL last = (host.windows.count <= 1);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [host.windows removeObjectForKey:key];
+        [host.webViews removeObjectForKey:key];
+        [host.delegates removeObjectForKey:key];
+        [host.bridgeScriptHandlers removeObjectForKey:key];
+        [host.assetSchemeHandlers removeObjectForKey:key];
+        [host.windowLabels removeObjectForKey:key];
+    });
+    if (last) {
         [self.host emitShutdown];
         [self.host stop];
     }
@@ -246,6 +250,7 @@ static BOOL ZeroNativePolicyListMatches(NSArray<NSString *> *values, NSURL *url)
                                                               NSWindowStyleMaskMiniaturizable)
                                                      backing:NSBackingStoreBuffered
                                                        defer:NO];
+    [window setReleasedWhenClosed:NO];
     [window setTitle:(title.length > 0 ? title : self.appName)];
     if (!restoreFrame) {
         [window center];

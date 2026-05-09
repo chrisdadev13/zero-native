@@ -64,7 +64,17 @@ const html =
     \\      if (jsWindow) show(await window.zero.windows.focus(jsWindow.id));
     \\    });
     \\    document.querySelector("#close-window").addEventListener("click", async () => {
-    \\      if (jsWindow) show(await window.zero.windows.close(jsWindow.id));
+    \\      try {
+    \\        const list = await window.zero.windows.list();
+    \\        const target = list.find((w) => w.open && w.focused)
+    \\          || list.find((w) => w.open && w.label.startsWith("js-tools-"));
+    \\        if (!target) { show("No window to close"); return; }
+    \\        const result = await window.zero.windows.close(target.id);
+    \\        if (jsWindow && jsWindow.id === target.id) jsWindow = null;
+    \\        show(result);
+    \\      } catch (error) {
+    \\        output.textContent = `${error.code || "error"}: ${error.message}`;
+    \\      }
     \\    });
     \\  </script>
     \\</body>
