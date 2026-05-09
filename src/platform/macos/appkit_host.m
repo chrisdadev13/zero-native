@@ -117,20 +117,38 @@ static BOOL ZeroNativePolicyListMatches(NSArray<NSString *> *values, NSURL *url)
 - (void)windowWillClose:(NSNotification *)notification {
     (void)notification;
     [self.host emitWindowFrameForWindowId:self.windowId open:NO];
+
     NSNumber *key = @(self.windowId);
     ZeroNativeAppKitHost *host = self.host;
-    BOOL last = (host.windows.count <= 1);
+
+    NSWindow *window = host.windows[key];
+    WKWebView *webView = host.webViews[key];
+    ZeroNativeWindowDelegate *delegate = host.delegates[key];
+    ZeroNativeBridgeScriptHandler *bridgeHandler = host.bridgeScriptHandlers[key];
+    ZeroNativeAssetSchemeHandler *assetHandler = host.assetSchemeHandlers[key];
+    NSString *label = host.windowLabels[key];
+
+    [host.windows removeObjectForKey:key];
+    [host.webViews removeObjectForKey:key];
+    [host.delegates removeObjectForKey:key];
+    [host.bridgeScriptHandlers removeObjectForKey:key];
+    [host.assetSchemeHandlers removeObjectForKey:key];
+    [host.windowLabels removeObjectForKey:key];
+
+    BOOL last = (host.windows.count == 0);
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        [host.windows removeObjectForKey:key];
-        [host.webViews removeObjectForKey:key];
-        [host.delegates removeObjectForKey:key];
-        [host.bridgeScriptHandlers removeObjectForKey:key];
-        [host.assetSchemeHandlers removeObjectForKey:key];
-        [host.windowLabels removeObjectForKey:key];
+        (void)window;
+        (void)webView;
+        (void)delegate;
+        (void)bridgeHandler;
+        (void)assetHandler;
+        (void)label;
     });
+
     if (last) {
-        [self.host emitShutdown];
-        [self.host stop];
+        [host emitShutdown];
+        [host stop];
     }
 }
 
